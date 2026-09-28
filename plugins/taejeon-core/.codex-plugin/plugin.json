@@ -1,6 +1,6 @@
 {
   "name": "taejeon-core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "태전 Core의 권한 내 업무 데이터를 조회하는 MCP 플러그인",
   "author": {
     "name": "태전 Core"
@@ -18,9 +18,9 @@
     ],
     "websiteURL": "https://taejeon-core-llm-mvp.vercel.app/me/mcp",
     "defaultPrompt": [
-      "내 계정에서 사용 가능한 Live API와 DB 기반 업무 자료를 구분해 알려줘. 조회시각과 원천 갱신시각은 구별하고, 확인되지 않은 시각은 미확인으로 표시해줘.",
-      "거래처 이름으로 약국 주소와 전화번호를 Live API에서 확인해줘.",
-      "현재 재고나 미수는 Live API로 조회하고, DB 대체 자료라면 답변 첫줄에 표시해줘."
+      "레모나의 지점별 현재 재고를 알려줘.",
+      "내 담당 거래처의 미수금 상위 10곳을 알려줘.",
+      "지난달 내 담당 거래처 매출 상위 10곳을 알려줘."
     ]
   },
   "mcpServers": "./.mcp.json"
