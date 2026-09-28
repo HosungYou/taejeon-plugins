@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "taejeon-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "태전 Core의 권한 내 업무 데이터를 조회하는 MCP 플러그인",
   "author": {
     "name": "태전 Core"
@@ -12,8 +12,8 @@
     "com.openai": {
       "interface": {
         "displayName": "태전 업무비서",
-        "shortDescription": "태전 계정으로 회사 데이터와 약국 기본정보를 조회합니다.",
-        "longDescription": "태전 Core MCP 서버에 연결합니다. 회사 계정 인증 후 서버가 허용한 범위의 업무 데이터를 조회하며, 제공되는 도구는 계정 권한과 활성화 상태에 따라 다릅니다.",
+        "shortDescription": "태전 계정으로 Live ERP와 출처가 표시된 업무 자료를 조회합니다.",
+        "longDescription": "태전 Core MCP 서버에 연결합니다. 현재 재고·채권·기간 매출은 허용된 Live API를 우선 조회하고, DB 기반 파생 지표와 API 장애 시 대체 자료는 출처와 한계를 구분해 안내합니다. 조회 범위는 계정 권한과 활성화 상태에 따릅니다.",
         "developerName": "태전 Core",
         "category": "Productivity",
         "capabilities": [
@@ -21,9 +21,9 @@
         ],
         "websiteURL": "https://taejeon-core-llm-mvp.vercel.app/me/mcp",
         "defaultPrompt": [
-          "조회 가능한 업무 데이터와 각 자료의 기준시각을 알려줘.",
-          "거래처 이름으로 약국 주소와 전화번호를 확인해줘.",
-          "조회한 자료가 Live API인지 DB 대체 자료인지 알려줘."
+          "내 계정에서 사용 가능한 Live API와 DB 기반 업무 자료를 구분해 알려줘. 조회시각과 원천 갱신시각은 구별하고, 확인되지 않은 시각은 미확인으로 표시해줘.",
+          "거래처 이름으로 약국 주소와 전화번호를 Live API에서 확인해줘.",
+          "현재 재고나 미수는 Live API로 조회하고, DB 대체 자료라면 답변 첫줄에 표시해줘."
         ]
       }
     }
