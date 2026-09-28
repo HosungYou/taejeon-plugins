@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "taejeon-core": {
+      "type": "streamable-http",
+      "url": "https://taejeon-core-llm-mvp.vercel.app/api/mcp"
+    }
+  }
+}

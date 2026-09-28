@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "taejeon-core": {
+      "type": "http",
+      "url": "https://taejeon-core-llm-mvp.vercel.app/api/mcp"
+    }
+  }
+}

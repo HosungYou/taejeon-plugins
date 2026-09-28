@@ -1,0 +1,20 @@
+{
+  "name": "taejeon",
+  "interface": {
+    "displayName": "태전 Core"
+  },
+  "plugins": [
+    {
+      "name": "taejeon-core",
+      "source": {
+        "source": "local",
+        "path": "./plugins/taejeon-core"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
