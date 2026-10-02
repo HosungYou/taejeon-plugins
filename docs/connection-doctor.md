@@ -96,3 +96,5 @@ Mac에서 실제 OAuth 초기 연결 시험을 수행했다. Windows 실행기 �
 
 CI는 고정된 공식 Codex 0.159.2 native 실행기를 Windows/Mac/Linux runner에 설치해 모의 OAuth 서버와 PKCE 교환, 격리된 file 저장소, cold-start, 도구 목록, 실제 모의 읽기 호출을 검사한다. 운영 토큰을 사용하지 않는다. 이 결과는 OS 기본 keyring, 회사 SSO 정책, 실제 ERP 업무 완료, 관리형 cloud broker의 증거로 확대하지 않는다.
 Core 0.4.0의 `/api/me/mcp/connection-status`는 본인 계정의 서버 관측 기록이다. `account_history`이며 현재 PC의 인증 저장·업무 완료를 보증하지 않는다. 로그인 세션별 격리는 신규 OAuth 로그인부터 적용되고 모호한 기존 세션은 기존 폐기 경계를 유지한다.
+
+1.1.2는 상세 runtime 목록을 사용하고, 인증은 있으나 초기 목록이 비어 있으면 최대 3회만 초기화를 확인한다. Auth required나 명시적 discovery 실패는 반복하지 않는다. runtime 미확인 상태는 cached 목록이 있어도 ready가 아니다. 명시적으로 지정한 검증된 조회가 실제 성공해야 해당 독립 프로세스의 읽기 확인으로 승격한다. Work/cloud 채팅 ID가 로컬 thread가 아니면 로컬 resume로 대신 검증하지 않는다.

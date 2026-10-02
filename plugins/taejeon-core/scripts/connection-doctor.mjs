@@ -34,12 +34,28 @@ export function classifyConnection(row) {
   else if(row.toolsError||['failed','cancelled','disabled'].includes(row.runtimeStatus)) stage='discovery';
   else if(row.runtimeStatus&&row.runtimeStatus!=='connected') stage='connection_not_ready';
   else if(!['oAuth','bearerToken'].includes(row.authStatus)) stage='authentication_unconfirmed';
-  else if(!hasSales) stage='sales_tool_missing';
   else if(row.runtimeStatus!=='connected') stage='connection_unconfirmed';
+  else if(!hasSales) stage='sales_tool_missing';
   else stage='ready';
-  return {stage,canQuerySales:stage==='ready',authStatus:row.authStatus??'unknown',
+  return {stage,canQuerySales:stage==='ready',salesToolAdvertised:hasSales,authStatus:row.authStatus??'unknown',
     runtimeStatus:row.runtimeStatus??null,toolCount:Object.keys(row.tools??{}).length,
     serverVersion:row.serverInfo?.version??null};
+}
+/** Bounded discovery settling; auth and terminal failures are never retried here. */
+export async function readSettledCatalog(rpc, params, sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))) {
+  let result;
+  for(let attempt=0;attempt<3;attempt++) {
+    result=await rpc.request('mcpServerStatus/list',{...params,detail:'full'});
+    const row=result.data?.find(x=>x.name===server);
+    const state=classifyConnection(row??{});
+    if(!row||row.toolsError||state.stage==='authentication'||!['oAuth','bearerToken'].includes(row.authStatus)||Object.keys(row.tools??{}).length||['failed','cancelled','disabled'].includes(row.runtimeStatus))break;
+    if(attempt<2)await sleep(500);
+  }
+  return result;
+}
+export function canAttemptRead(state) {
+  // Only an explicit verified read can settle unknown runtime; the call itself rechecks server authorization.
+  return state.canQuerySales||(state.stage==='connection_unconfirmed'&&state.salesToolAdvertised);
 }
 export function summarizeSales(result) {
   let data=result.structuredContent;
@@ -141,20 +157,22 @@ export async function main(argv=process.argv.slice(2)) {
   try {
     await rpc.request('initialize',{clientInfo:{name:'taejeon-connection-doctor',version:'0.1.0'},capabilities:{experimentalApi:true}});
     rpc.notify('initialized');phase='discovery';
-    let result=await rpc.request('mcpServerStatus/list',{serverName:server,detail:'toolsAndAuthOnly'});
+    let result=await readSettledCatalog(rpc,{serverName:server});
     const row=result.data?.find(x=>x.name===server);
     if(!row)return {...report,stage:'server_unavailable',canQuerySales:false};
     const state=classifyConnection(row);
-    if(!state.canQuerySales||!query)return {...report,...state};
+    if(!canAttemptRead(state)||!query)return {...report,...state};
     // Resume only the explicit existing local chat. No new chat or model turn.
     phase='thread_binding';
     await rpc.request('thread/resume',{threadId:options.thread});
-    result=await rpc.request('mcpServerStatus/list',{serverName:server,threadId:options.thread,detail:'toolsAndAuthOnly'});
+    result=await readSettledCatalog(rpc,{serverName:server,threadId:options.thread});
     const bound=classifyConnection(result.data?.find(x=>x.name===server)??{});
-    if(!bound.canQuerySales)return {...report,...bound};
+    if(!canAttemptRead(bound))return {...report,...bound};
     phase='sales_call';
     const sales=await rpc.request('mcpServer/tool/call',{server,threadId:options.thread,tool:salesTool,arguments:query},75000);
-    return {...report,...bound,sales:summarizeSales(sales)};
+    const summary=summarizeSales(sales);
+    const readVerified=!sales.isError&&summary.source&&['sales_complete','sales_empty_verified','sales_partial','sales_fragment'].includes(summary.stage);
+    return {...report,...bound,...(readVerified?{stage:'ready',canQuerySales:true}:{}),sales:summary};
   } catch(error){return {...report,stage:`${phase}_failed`,canQuerySales:false,errorCategory:error.message==='bounded_timeout'?'timeout':'client_protocol_failure'};}
   finally{await rpc.close();}
 }
