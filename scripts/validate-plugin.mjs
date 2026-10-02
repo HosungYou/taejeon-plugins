@@ -13,8 +13,9 @@ const allowedFiles = new Set([
   'plugins/taejeon-core/.codex-plugin/plugin.json',
   'plugins/taejeon-core/mcp.json',
   'plugins/taejeon-core/.mcp.json',
+  'plugins/taejeon-core/skills/erp-extraction/SKILL.md',
 ]);
-const allowedDirs = new Set(['.agents', '.agents/plugins', 'plugins', 'plugins/taejeon-core', 'plugins/taejeon-core/.codex-plugin']);
+const allowedDirs = new Set(['.agents', '.agents/plugins', 'plugins', 'plugins/taejeon-core', 'plugins/taejeon-core/.codex-plugin','plugins/taejeon-core/skills','plugins/taejeon-core/skills/erp-extraction']);
 function walk(path) {
   const rel = relative(root, path).split('\\').join('/');
   const stat = lstatSync(path);
@@ -37,6 +38,8 @@ try {
   walk(join(root, '.agents'));
   walk(join(root, 'plugins'));
   for (const path of allowedFiles) assert(lstatSync(join(root, path)).isFile(), `missing manifest: ${path}`);
+  const skill=readFileSync(join(root,'plugins/taejeon-core/skills/erp-extraction/SKILL.md'),'utf8');
+  assert(skill.length<=16384&&!skill.includes('\0')&&/^---\r?\nname: erp-extraction\r?\ndescription: [^\r\n]+\r?\n---/.test(skill),'invalid extraction skill');
   const market = json('.agents/plugins/marketplace.json');
   assert.deepEqual(market, {
     name: 'taejeon', interface: { displayName: '태전 Core' },
@@ -69,7 +72,7 @@ try {
     keys(mcp.mcpServers, ['taejeon-core'], `${path} servers`);
     assert.deepEqual(mcp.mcpServers['taejeon-core'], { type, url: endpoint }, `${path}: only the approved HTTP endpoint is allowed (no commands, headers, env or tokens)`);
   }
-  console.log('PASS: approved HTTP endpoint, no executable package files or embedded authentication, matching manifests');
+  console.log('PASS: approved HTTP endpoint, bounded text extraction skill, no executables or embedded authentication, matching manifests');
 } catch (error) {
   // Do not print manifest values: a rejected field could contain a credential.
   console.error(`Plugin validation failed: ${error instanceof assert.AssertionError ? error.message.split('\n')[0] : 'invalid or missing manifest'}`);
