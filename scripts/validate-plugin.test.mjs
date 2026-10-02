@@ -16,7 +16,7 @@ function run(change) {
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 test('accepts the reviewed HTTP-only package', () => assert.equal(run().status, 0));
-test('accepts only the bounded text extraction skill without executable companions',()=>{
+test('accepts the bounded extraction skill and approved manual doctor',()=>{
  assert.equal(run(({root})=>{
   const path=join(root,'plugins/taejeon-core/skills/erp-extraction');mkdirSync(path,{recursive:true});
   writeFileSync(join(path,'SKILL.md'),'---\nname: erp-extraction\ndescription: Read permission-scoped ERP data.\n---\nRead data only.');

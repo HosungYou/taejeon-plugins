@@ -3,7 +3,9 @@ import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 
 // Deliberately narrow: changing executable capabilities or destinations requires
-// reviewing this policy as well as the manifests. No third-party dependencies.
+// reviewing this policy as well as the manifests. The manually invoked connection
+// doctor is approved; no startup hook or stdio server may run it automatically.
+// No third-party dependencies.
 const root = resolve(process.argv[2] ?? '.');
 const endpoint = 'https://taejeon-core-llm-mvp.vercel.app/api/mcp';
 const homepage = 'https://github.com/HosungYou/taejeon-plugins';
@@ -14,8 +16,9 @@ const allowedFiles = new Set([
   'plugins/taejeon-core/mcp.json',
   'plugins/taejeon-core/.mcp.json',
   'plugins/taejeon-core/skills/erp-extraction/SKILL.md',
+  'plugins/taejeon-core/scripts/connection-doctor.mjs',
 ]);
-const allowedDirs = new Set(['.agents', '.agents/plugins', 'plugins', 'plugins/taejeon-core', 'plugins/taejeon-core/.codex-plugin','plugins/taejeon-core/skills','plugins/taejeon-core/skills/erp-extraction']);
+const allowedDirs = new Set(['.agents', '.agents/plugins', 'plugins', 'plugins/taejeon-core', 'plugins/taejeon-core/.codex-plugin','plugins/taejeon-core/skills','plugins/taejeon-core/skills/erp-extraction','plugins/taejeon-core/scripts']);
 function walk(path) {
   const rel = relative(root, path).split('\\').join('/');
   const stat = lstatSync(path);
@@ -72,7 +75,7 @@ try {
     keys(mcp.mcpServers, ['taejeon-core'], `${path} servers`);
     assert.deepEqual(mcp.mcpServers['taejeon-core'], { type, url: endpoint }, `${path}: only the approved HTTP endpoint is allowed (no commands, headers, env or tokens)`);
   }
-  console.log('PASS: approved HTTP endpoint, bounded text extraction skill, no executables or embedded authentication, matching manifests');
+  console.log('PASS: approved HTTP endpoint, extraction skill and manual connection doctor, no automatic executables or embedded authentication, matching manifests');
 } catch (error) {
   // Do not print manifest values: a rejected field could contain a credential.
   console.error(`Plugin validation failed: ${error instanceof assert.AssertionError ? error.message.split('\n')[0] : 'invalid or missing manifest'}`);
