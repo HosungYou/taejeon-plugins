@@ -20,3 +20,22 @@ jobs:
           node-version: '24'
       - run: node scripts/validate-plugin.mjs
       - run: node --test scripts/validate-plugin.test.mjs
+  connection-doctor:
+    name: Connection doctor (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: node --test scripts/connection-doctor.test.mjs
+      - name: Install pinned official Codex fixture client
+        run: npm install --prefix .ci-codex --no-save @openai/codex@0.159.2
+      - name: OAuth persistence and cold-start read with native client
+        run: node scripts/run-oauth-fixture.mjs
