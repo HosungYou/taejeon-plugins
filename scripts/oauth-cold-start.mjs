@@ -63,7 +63,7 @@ try {
  await fetch(login.authorizationUrl);
  for(let i=0;i<100&&exchanges===0;i++)await new Promise(resolve=>setTimeout(resolve,50));
  assert(exchanges>0,'OAuth token exchange reached fixture');
- await new Promise(resolve=>setTimeout(resolve,500));rpc.close();rpc=null;
+ await new Promise(resolve=>setTimeout(resolve,500));await rpc.close();rpc=null;
  // Cold start must load its own persisted credentials without authorizing again.
  rpc=await start();
  const status=await rpc.request('mcpServerStatus/list',{serverName:'taejeon-fixture',detail:'toolsAndAuthOnly'});
@@ -73,4 +73,4 @@ try {
  const read=await rpc.request('mcpServer/tool/call',{server:'taejeon-fixture',threadId:started.thread.id,tool:'erp_live_sales_summary',arguments:{}});
  assert(!read.isError);assert.equal(read.structuredContent?.source,'local_fixture');assert(reads>0);
  console.log(JSON.stringify({platform:process.platform,codexVersion:version,oauthFixture:'verified',coldStart:'verified',read:'verified',credentialBackend:'isolated_file',productionCredentials:false}));
-}finally{rpc?.close();await new Promise(resolve=>server.close(resolve));rmSync(home,{recursive:true,force:true});}
+}finally{await rpc?.close();await new Promise(resolve=>server.close(resolve));rmSync(home,{recursive:true,force:true,maxRetries:5,retryDelay:100});}

@@ -89,7 +89,16 @@ export function createRpc({file,args=['app-server','--stdio'],timeoutMs=45000,en
       child.stdin.write(JSON.stringify({id,method,params})+'\n');
     });},
     notify(method){child.stdin.write(JSON.stringify({method})+'\n');},
-    close(){lines.close();rejectAll();child.stdin.end();child.kill();}
+    close(){
+      lines.close();rejectAll();
+      return new Promise(resolveClosed=>{
+        if(child.exitCode!==null||child.signalCode!==null){resolveClosed();return;}
+        const timer=setTimeout(()=>{child.kill();resolveClosed();},2000);
+        child.once('exit',()=>{clearTimeout(timer);resolveClosed();});
+        // Let the host release files and OS jobs before bounded forced termination.
+        child.stdin.end();
+      });
+    }
   };
 }
 export function validateSalesRequest(input) {
@@ -147,7 +156,7 @@ export async function main(argv=process.argv.slice(2)) {
     const sales=await rpc.request('mcpServer/tool/call',{server,threadId:options.thread,tool:salesTool,arguments:query},75000);
     return {...report,...bound,sales:summarizeSales(sales)};
   } catch(error){return {...report,stage:`${phase}_failed`,canQuerySales:false,errorCategory:error.message==='bounded_timeout'?'timeout':'client_protocol_failure'};}
-  finally{rpc.close();}
+  finally{await rpc.close();}
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   main().then(report=>{

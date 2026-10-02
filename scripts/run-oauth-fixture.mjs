@@ -12,4 +12,5 @@ const pkg=require.resolve(`@openai/codex-${platformName}-${arch}/package.json`);
 const binary=['bin','codex'].map(dir=>join(dirname(pkg),'vendor',triple,dir,platform==='win32'?'codex.exe':'codex')).find(path=>existsSync(path));
 assert(binary,'official native payload missing');
 const result=spawnSync(process.execPath,['scripts/oauth-cold-start.mjs'],{env:{...process.env,CODEX_FIXTURE_EXECUTABLE:binary},stdio:'inherit',shell:false});
+console.log(JSON.stringify({fixtureProcessExit:result.status,fixtureProcessSignal:result.signal,errorCategory:result.error?.code??null}));
 process.exitCode=result.status??1;
