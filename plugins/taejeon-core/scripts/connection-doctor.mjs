@@ -2,14 +2,26 @@ import {spawn, execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {createInterface} from 'node:readline';
 import {fileURLToPath} from 'node:url';
-import {resolve} from 'node:path';
+import {resolve,dirname,join} from 'node:path';
+import {existsSync} from 'node:fs';
 
 const server='taejeon-core';
 const salesTool='erp_live_sales_summary';
+/** Resolve official npm native payloads without executing a Windows shell wrapper. */
+export function nativeNpmCandidates(env=process.env, platform=process.platform) {
+  const triple=platform==='win32'?(process.arch==='arm64'?'aarch64-pc-windows-msvc':'x86_64-pc-windows-msvc'):platform==='darwin'?(process.arch==='arm64'?'aarch64-apple-darwin':'x86_64-apple-darwin'):(process.arch==='arm64'?'aarch64-unknown-linux-musl':'x86_64-unknown-linux-musl');
+  const executable=platform==='win32'?'codex.exe':'codex';
+  const packageName=platform==='win32'?(process.arch==='arm64'?'codex-win32-arm64':'codex-win32-x64'):platform==='darwin'?(process.arch==='arm64'?'codex-darwin-arm64':'codex-darwin-x64'):(process.arch==='arm64'?'codex-linux-arm64':'codex-linux-x64');
+  return (env.PATH??env.Path??'').split(platform==='win32'?';':':').flatMap(dir=>[
+    join(dir,'node_modules','@openai',packageName,'vendor',triple,'codex',executable),
+    join(dirname(dir),'lib','node_modules','@openai',packageName,'vendor',triple,'codex',executable),
+    join(dir,'node_modules','@openai','codex','vendor',triple,'codex',executable),
+  ]).filter(path=>existsSync(path));
+}
 export function codexCandidates({explicit,env=process.env,platform=process.platform}={}) {
   return [...new Set([explicit,env.CODEX_CLI_PATH,
     ...(platform==='darwin'?['/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex']:[]),
-    ...(platform==='win32'?['codex.exe']:['codex'])].filter(Boolean))];
+    ...nativeNpmCandidates(env,platform),...(platform==='win32'?['codex.exe']:['codex'])].filter(Boolean))];
 }
 export function classifyConnection(row) {
   const toolNames=Object.values(row.tools??{}).map(x=>x.name).filter(Boolean);
@@ -21,6 +33,7 @@ export function classifyConnection(row) {
   else if(row.runtimeStatus&&row.runtimeStatus!=='connected') stage='connection_not_ready';
   else if(!['oAuth','bearerToken'].includes(row.authStatus)) stage='authentication_unconfirmed';
   else if(!hasSales) stage='sales_tool_missing';
+  else if(row.runtimeStatus!=='connected') stage='connection_unconfirmed';
   else stage='ready';
   return {stage,canQuerySales:stage==='ready',authStatus:row.authStatus??'unknown',
     runtimeStatus:row.runtimeStatus??null,toolCount:Object.keys(row.tools??{}).length,
@@ -46,8 +59,8 @@ export function summarizeSales(result) {
     fetchedAt:summary.fetchedAt??null,sourceAsOf:summary.sourceAsOf??null,
     missingJobs:(summary.coverage??[]).filter(x=>x.state!=='complete').length};
 }
-export function createRpc({file,args=['app-server','--stdio'],timeoutMs=45000}) {
-  const child=spawn(file,args,{stdio:['pipe','pipe','pipe'],shell:false,windowsHide:true});
+export function createRpc({file,args=['app-server','--stdio'],timeoutMs=45000,env=process.env}) {
+  const child=spawn(file,args,{stdio:['pipe','pipe','pipe'],shell:false,windowsHide:true,env});
   const pending=new Map();let sequence=0;let closed=false;
   const rejectAll=()=>{closed=true;for(const item of pending.values()){clearTimeout(item.timer);item.reject(new Error('app_server_closed'));}pending.clear();};
   child.on('error',rejectAll);child.on('exit',rejectAll);child.stdin.on('error',rejectAll);
@@ -81,11 +94,11 @@ export function validateSalesRequest(input) {
   if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('invalid_sales_request');
   const allowed=['custno','from','to','detail','companies'];
   if(Object.keys(input).some(k=>!allowed.includes(k)))throw new Error('invalid_sales_request');
-  if(!Array.isArray(input.custno)||!input.custno.length||input.custno.some(x=>typeof x!=='string'||!/^\d+$/.test(x)))throw new Error('verified_customer_codes_required');
+  if(!Array.isArray(input.custno)||!input.custno.length||input.custno.length>1000||input.custno.some(x=>typeof x!=='string'||! /^[A-Za-z0-9]{1,5}$/.test(x)))throw new Error('verified_customer_codes_required');
   for(const date of [input.from,input.to])if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date)throw new Error('invalid_period');
-  if(input.from>input.to)throw new Error('invalid_period');
+  if(input.from>input.to||Date.parse(input.to)-Date.parse(input.from)>365*86400000)throw new Error('invalid_period');
   if(input.detail!==undefined&&!['products','lines'].includes(input.detail))throw new Error('invalid_detail');
-  if(input.companies!==undefined&&(!Array.isArray(input.companies)||!input.companies.length||input.companies.some(x=>typeof x!=='string'||!/^\d+$/.test(x))))throw new Error('invalid_companies');
+  if(input.companies!==undefined&&(!Array.isArray(input.companies)||!input.companies.length||input.companies.length>4||input.companies.some(x=>!['1','2','3','5'].includes(x))))throw new Error('invalid_companies');
   return {...input,detail:input.detail??'lines'};
 }
 export async function main(argv=process.argv.slice(2)) {
@@ -96,7 +109,7 @@ export async function main(argv=process.argv.slice(2)) {
   }
   if(Boolean(options.thread)!==Boolean(options['sales-args']))throw new Error('thread_and_sales_args_required_together');
   const query=options['sales-args']?validateSalesRequest(JSON.parse(readFileSync(options['sales-args'],'utf8'))):null;
-  const report={platform:process.platform,operation:'read_only',checkedAt:new Date().toISOString()};
+  const report={executionEnvironment:process.env.WSL_DISTRO_NAME?'wsl':process.env.SSH_CONNECTION?'ssh':'local',platform:process.platform,operation:'read_only',evidenceScope:'independent_process',checkedAt:new Date().toISOString()};
   let binary;
   for(const candidate of codexCandidates({explicit:options.codex})) {
     // Windows npm .cmd wrappers require shell execution. Use the real executable.

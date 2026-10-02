@@ -35,3 +35,7 @@ jobs:
         with:
           node-version: '24'
       - run: node --test scripts/connection-doctor.test.mjs
+      - name: Install pinned official Codex fixture client
+        run: npm install --prefix .ci-codex --no-save @openai/codex@0.159.2
+      - name: OAuth persistence and cold-start read with native client
+        run: node scripts/run-oauth-fixture.mjs

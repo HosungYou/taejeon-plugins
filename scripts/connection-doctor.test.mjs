@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const module = await import('../plugins/taejeon-core/scripts/connection-doctor.mjs').catch(() => ({}));
+test('unknown runtime with a cached catalog is not ready',()=>assert.equal(module.classifyConnection({authStatus:'oAuth',runtimeStatus:null,tools:{erp_live_sales_summary:{name:'erp_live_sales_summary'}}}).canQuerySales,false));
+test('accepts the Core alphanumeric code contract',()=>assert.deepEqual(module.validateSalesRequest({custno:['E0000'],from:'2026-09-01',to:'2026-09-30'}).custno,['E0000']));
 
 test('authentication-required initialization cannot become empty sales or ready', () => {
   assert.equal(typeof module.classifyConnection, 'function', 'connection diagnosis is missing');

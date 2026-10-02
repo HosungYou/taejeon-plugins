@@ -39,6 +39,7 @@ node plugins/taejeon-core/scripts/connection-doctor.mjs --codex "실제 Codex �
 | authentication | 현재 클라이언트의 인증 또는 initialize 인증 거부 |
 | authentication_unconfirmed | 인증 상태를 확인하지 못함 |
 | discovery | 연결/도구 목록 조회 실패 |
+| connection_unconfirmed | 캐시된 도구는 있으나 현재 연결 성공을 확인하지 못함 |
 | connection_not_ready | 연결이 아직 시작되지 않았거나 진행 중 |
 | sales_tool_missing | 확인된 인증과 목록에 매출 도구가 없음 |
 | ready | 이 프로세스에서 매출 도구 호출 가능. 아직 실제 조회 성공은 아님 |
@@ -62,7 +63,7 @@ node plugins/taejeon-core/scripts/connection-doctor.mjs --codex "실제 Codex �
 `companies`를 생략한다. 서버의 기존 읽기 권한을 그대로 적용한다.
 
 ```json
-{"custno":["확인한 숫자형 거래처 코드"],"from":"2026-09-01","to":"2026-09-30","detail":"lines"}
+{"custno":["확인한 영숫자 1~5자리 거래처 코드"],"from":"2026-09-01","to":"2026-09-30","detail":"lines"}
 ```
 
 ```sh
@@ -85,3 +86,13 @@ node plugins/taejeon-core/scripts/connection-doctor.mjs --thread EXISTING_LOCAL_
 Mac에서 실제 OAuth 초기 연결 시험을 수행했다. Windows 실행기 선택과
 프로토콜 처리는 자동 검증하지만 Windows 실계정·보안 저장소·브라우저
 콜백 검증은 해당 장치에서 별도로 수행해야 한다.
+
+## 호스트별 인증과 출시 증거
+
+- ChatGPT Work·관리형 클라우드에서는 해당 호스트의 연결/OAuth 화면에서 로그인한다. 이 로컬 실행기를 cloud adapter로 사용하거나 cloud chat ID를 resume하지 않는다.
+- Codex 데스크톱에서는 앱의 태전 연결에서 로그인하고 새 채팅에서 도구를 호출한다. 독립 진단 프로세스의 결과는 앱 자체의 성공/실패를 입증하지 않는다.
+- CLI는 해당 프로필의 `codex mcp login taejeon-core` 경로를 사용한다. SSH는 원격 callback의 loopback 경로가 로컬 브라우저와 다름을 확인한다. WSL은 별도 Linux 호스트에서 인증한다. 다른 기기의 인증 파일을 복사하지 않는다.
+- 정상 직원 사용에는 Node·이 진단기 실행이 필수가 아니다. MCP OAuth와 ChatGPT/Codex 계정 로그인은 별개다.
+
+CI는 고정된 공식 Codex 0.159.2 native 실행기를 Windows/Mac/Linux runner에 설치해 모의 OAuth 서버와 PKCE 교환, 격리된 file 저장소, cold-start, 도구 목록, 실제 모의 읽기 호출을 검사한다. 운영 토큰을 사용하지 않는다. 이 결과는 OS 기본 keyring, 회사 SSO 정책, 실제 ERP 업무 완료, 관리형 cloud broker의 증거로 확대하지 않는다.
+Core 0.4.0의 `/api/me/mcp/connection-status`는 본인 계정의 서버 관측 기록이다. `account_history`이며 현재 PC의 인증 저장·업무 완료를 보증하지 않는다. 로그인 세션별 격리는 신규 OAuth 로그인부터 적용되고 모호한 기존 세션은 기존 폐기 경계를 유지한다.
