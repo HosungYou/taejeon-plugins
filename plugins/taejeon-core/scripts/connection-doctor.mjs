@@ -13,10 +13,12 @@ export function nativeNpmCandidates(env=process.env, platform=process.platform) 
   const executable=platform==='win32'?'codex.exe':'codex';
   const packageName=platform==='win32'?(process.arch==='arm64'?'codex-win32-arm64':'codex-win32-x64'):platform==='darwin'?(process.arch==='arm64'?'codex-darwin-arm64':'codex-darwin-x64'):(process.arch==='arm64'?'codex-linux-arm64':'codex-linux-x64');
   return (env.PATH??env.Path??'').split(platform==='win32'?';':':').flatMap(dir=>[
-    join(dir,'node_modules','@openai',packageName,'vendor',triple,'codex',executable),
-    join(dirname(dir),'lib','node_modules','@openai',packageName,'vendor',triple,'codex',executable),
-    join(dir,'node_modules','@openai','codex','vendor',triple,'codex',executable),
-  ]).filter(path=>existsSync(path));
+    join(dir,'node_modules','@openai',packageName),
+    join(dirname(dir),'lib','node_modules','@openai',packageName),
+    join(dir,'node_modules','@openai','codex','node_modules','@openai',packageName),
+    join(dirname(dir),'lib','node_modules','@openai','codex','node_modules','@openai',packageName),
+    join(dir,'node_modules','@openai','codex'),
+  ].flatMap(root=>['bin','codex'].map(folder=>join(root,'vendor',triple,folder,executable)))).filter(path=>existsSync(path));
 }
 export function codexCandidates({explicit,env=process.env,platform=process.platform}={}) {
   return [...new Set([explicit,env.CODEX_CLI_PATH,

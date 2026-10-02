@@ -1,5 +1,6 @@
 import {createRequire} from 'node:module';
 import {dirname,join} from 'node:path';
+import {existsSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 const require=createRequire(join(process.cwd(),'.ci-codex','package.json'));
@@ -8,6 +9,7 @@ const platformName={win32:'win32',darwin:'darwin',linux:'linux'}[platform];
 const triple={win32:arch==='arm64'?'aarch64-pc-windows-msvc':'x86_64-pc-windows-msvc',darwin:arch==='arm64'?'aarch64-apple-darwin':'x86_64-apple-darwin',linux:arch==='arm64'?'aarch64-unknown-linux-musl':'x86_64-unknown-linux-musl'}[platform];
 assert(platformName&&['arm64','x64'].includes(arch),'unsupported fixture platform');
 const pkg=require.resolve(`@openai/codex-${platformName}-${arch}/package.json`);
-const binary=join(dirname(pkg),'vendor',triple,'codex',platform==='win32'?'codex.exe':'codex');
+const binary=['bin','codex'].map(dir=>join(dirname(pkg),'vendor',triple,dir,platform==='win32'?'codex.exe':'codex')).find(path=>existsSync(path));
+assert(binary,'official native payload missing');
 const result=spawnSync(process.execPath,['scripts/oauth-cold-start.mjs'],{env:{...process.env,CODEX_FIXTURE_EXECUTABLE:binary},stdio:'inherit',shell:false});
 process.exitCode=result.status??1;
