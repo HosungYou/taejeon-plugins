@@ -1,6 +1,6 @@
 {
   "name": "taejeon-core",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "태전 Core의 권한 내 업무 데이터를 조회하는 MCP 플러그인",
   "author": {
     "name": "태전 Core"

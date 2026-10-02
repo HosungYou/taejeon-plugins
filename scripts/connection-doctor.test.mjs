@@ -18,7 +18,7 @@ test('valid OAuth with no catalog reports discovery failure rather than missing 
 });
 test('connected catalog without sales tool reports capability unavailable', () => {
   assert.equal(typeof module.classifyConnection, 'function');
-  assert.equal(module.classifyConnection({authStatus:'oAuth',tools:{erp_data_catalog:{}}}).stage,'sales_tool_missing');
+  assert.equal(module.classifyConnection({authStatus:'oAuth',runtimeStatus:'connected',tools:{erp_data_catalog:{}}}).stage,'sales_tool_missing');
 });
 test('sales is ready only when its authenticated catalog is available', () => {
   assert.equal(typeof module.classifyConnection, 'function');
@@ -72,4 +72,19 @@ test('subprocess exit rejects outstanding requests',async()=>{
 test('CLI usage validation does not invoke a configured executable',()=>{
   const script=new URL('../plugins/taejeon-core/scripts/connection-doctor.mjs',import.meta.url);
   assert.throws(()=>execFileSync(process.execPath,[fileURLToPath(script),'--thread','chat'],{stdio:'ignore'}));
+});
+
+test('unknown runtime with an initial empty catalog is unconfirmed rather than a missing capability',()=>{
+  const state=module.classifyConnection({authStatus:'oAuth',tools:{}});
+  assert.equal(state.stage,'connection_unconfirmed');assert.equal(module.canAttemptRead(state),false);
+  const cached=module.classifyConnection({authStatus:'oAuth',tools:{erp_live_sales_summary:{}}});
+  assert.equal(cached.canQuerySales,false);assert.equal(module.canAttemptRead(cached),true);
+});
+test('initial catalog settling is bounded and requests full runtime detail',async()=>{
+  let calls=0;
+  const rpc={request:async(method,params)=>{assert.equal(params.detail,'full');return {data:[{name:'taejeon-core',authStatus:'oAuth',tools:++calls===3?{erp_live_sales_summary:{}}:{}}]};}};
+  const result=await module.readSettledCatalog(rpc,{serverName:'taejeon-core'},async()=>{});
+  assert.equal(calls,3);assert.equal(module.classifyConnection(result.data[0]).canQuerySales,false);
+  calls=0;rpc.request=async()=>{calls++;return {data:[{name:'taejeon-core',authStatus:'notLoggedIn',tools:{},toolsError:'Auth required'}]};};
+  await module.readSettledCatalog(rpc,{},async()=>{});assert.equal(calls,1);
 });
