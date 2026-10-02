@@ -262,3 +262,7 @@ Claude 이미지는 기존 Core 안내의 **2026년 7월 화면**입니다. 메�
 ## 설치 패키지 검사
 
 서버 주소·인증 헤더·실행 파일·두 manifest의 일치 여부를 [자동 검사](docs/security-controls.md)합니다. 이 검사의 통과가 Core 서버의 전체 보안 검증을 뜻하지는 않습니다.
+
+## ERP 추출·복구 지침 변경안
+
+1.1.0 소스에는 [ERP 추출 skill](plugins/taejeon-core/skills/erp-extraction/SKILL.md)이 포함됩니다. 파일 해석·분석·엑셀 생성은 ChatGPT/Codex가 맡고 태전 MCP는 권한 내 자료 발견·조회·복구·데이터 표상을 제공합니다. 원천 실패를 매출 0건으로 처리하지 않으며 실패 구간 재조회와 부분 결과를 구분합니다. 이 복구 계약은 Core MCP 0.3.0 이상에서 제공됩니다. [릴리스 변경안](docs/extraction-release-1.1.0.md)은 구현과 운영 반영을 구분합니다.

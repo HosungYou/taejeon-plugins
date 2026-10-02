@@ -1,6 +1,6 @@
 {
   "name": "taejeon-core",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "태전 Core의 권한 내 업무 데이터를 조회하는 MCP 플러그인",
   "author": {
     "name": "태전 Core"
@@ -9,8 +9,8 @@
   "repository": "https://github.com/HosungYou/taejeon-plugins",
   "interface": {
     "displayName": "태전 업무비서",
-    "shortDescription": "태전 계정으로 Live ERP와 출처가 표시된 업무 자료를 조회합니다.",
-    "longDescription": "태전 Core MCP 서버에 연결합니다. 연결된 활성 구성원은 Live ERP 도구를 사용하고, 실제 조회는 Core의 업무별 읽기 권한을 따릅니다. 현재 재고·채권·기간 매출은 Live API를 우선 조회하며 품목별 매출·전표 명세와 출고 행을 구분합니다. DB 기반 파생 지표와 대체 자료는 출처·기준시각·완전성을 함께 안내합니다.",
+    "shortDescription": "권한 내 ERP 추출과 누락 복구를 지원합니다.",
+    "longDescription": "태전 Core MCP의 권한 내 Live ERP 자료 발견·코드 연결·추출·데이터 표상을 지원합니다. 실패와 정상 빈 결과를 구분하고 누락 구간을 재조회하는 추출 지침을 제공합니다. 파일 해석·분석·계산·보고서 생성은 ChatGPT/Codex가 담당합니다. 출처·기간·단위·완전성을 보존하며 미확인 분류·VAT는 추정하지 않습니다.",
     "developerName": "태전 Core",
     "category": "Productivity",
     "capabilities": [
