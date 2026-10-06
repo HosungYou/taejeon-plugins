@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "taejeon-core",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "태전 Core의 권한 내 업무 데이터를 조회하는 MCP 플러그인",
   "author": {
     "name": "태전 Core"
@@ -12,8 +12,8 @@
     "com.openai": {
       "interface": {
         "displayName": "태전 업무비서",
-        "shortDescription": "권한 내 ERP 추출과 누락 복구를 지원합니다.",
-        "longDescription": "태전 Core MCP의 권한 내 Live ERP 자료 발견·코드 연결·추출·데이터 표상을 지원합니다. 실패와 정상 빈 결과를 구분하고 누락 구간을 재조회하는 추출 지침을 제공합니다. 파일 해석·분석·계산·보고서 생성은 ChatGPT/Codex가 담당합니다. 출처·기간·단위·완전성을 보존하며 미확인 분류·VAT는 추정하지 않습니다.",
+        "shortDescription": "권한 내 ERP 추출·매출 품목 합계·추이를 지원합니다.",
+        "longDescription": "태전 Core MCP의 권한 내 Live ERP 자료 발견·코드 연결·추출을 지원합니다. 활성화된 원장 참조 기능은 최초 수집을 24시간 재사용해 품목 합계·일/주 추이를 계산하며 상태·중지를 확인합니다. 부분 결과와 정상 0원을 구분하고 전체 상세 반복 수집을 피합니다. 기능은 서버 배포·계정 활성화에 따릅니다. 파일 해석·보고서는 ChatGPT/Codex/Claude가 담당합니다.",
         "developerName": "태전 Core",
         "category": "Productivity",
         "capabilities": [
