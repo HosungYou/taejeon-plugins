@@ -19,7 +19,7 @@
 - 태전 회사 계정과 Microsoft 로그인에 필요한 추가 인증 수단을 준비합니다.
 - 본인이 사용하는 Claude·ChatGPT 계정으로 시작합니다. 회사 자료 조회에는 별도로 태전 회사 계정 인증이 필요하며, 조회 결과는 해당 AI 서비스의 대화에 전달됩니다.
 - 앱을 설치했다고 Core 권한이 생기지는 않습니다. 사용 가능한 자료와 도구는 Core의 계정 권한·활성화 상태에 따라 달라집니다.
-- 이미 태전 업무비서가 설치돼 있다면 다시 설치하지 말고 [3단계](#3단계--서버를-확인하고-새-대화에서-사용하기)부터 확인하세요.
+- 이미 설치했다면 [3단계](#3단계--서버를-확인하고-새-대화에서-사용하기)부터 확인하세요. 구버전·캐시 문제는 [Mac·Windows 업데이트·캐시 복구](#macwindows-업데이트캐시-복구)로 바로 이동합니다.
 
 ## 공통 필수 단계 — 태전 Core에서 본인 인증과 권한 확인
 
@@ -75,23 +75,61 @@
 ### ChatGPT
 
 - 개발자 모드로 MCP를 직접 연결했다면 **Plugins → 태전 연결 → Refresh**를 선택하고, 도구 목록을 확인한 뒤 새 대화를 시작합니다.
-- GitHub 마켓플레이스에서 설치했다면 플러그인 화면에서 마켓플레이스를 새로고침하고 태전 업무비서를 확인한 뒤 새 대화를 시작합니다. 앱이 갱신을 반영하지 않으면 앱을 다시 열어 확인합니다. 같은 마켓플레이스를 반복 추가하지 않습니다.
+- GitHub 마켓플레이스에서 설치했다면 플러그인 화면에서 사용할 기기를 확인하고 새로고침한 뒤 새 대화를 시작합니다. 구버전이 남아 있으면 아래 [Mac·Windows 업데이트·캐시 복구](#macwindows-업데이트캐시-복구)를 따릅니다. 같은 마켓플레이스를 반복 추가하지 않습니다.
 - 회사 인증 요청이 다시 나오면 본인 회사 계정으로 연결합니다. 권한 변경을 이유로 모든 직원의 연결을 폐기하거나 재인증을 강제하지 않습니다.
 
-### Codex
+### Mac·Windows 업데이트·캐시 복구
 
-Mac·Windows에서 인증 후에도 도구가 보이지 않으면 [공통 연결 진단](docs/connection-doctor.md)으로 실제 실행기·설치 버전·MCP 초기 연결·도구 목록을 확인합니다. 활성 OAuth 세션 표시만으로 현재 채팅의 조회 성공을 판단하지 않습니다. 진단 실행기는 수동 실행하며 캐시·권한·토큰을 변경하지 않습니다.
+**아래는 채팅에 보내는 프롬프트가 아니라 본인 PC의 터미널 명령입니다.** Work를 사용해도 실행 컴퓨터가 본인 Mac·Windows인지 먼저 확인합니다. 클라우드·SSH·WSL에서 실행하면 다른 설치 환경을 갱신할 수 있습니다. `codex`는 사용 중인 ChatGPT/Codex 앱과 같은 플러그인 설치 경로를 사용하는 CLI여야 합니다.
 
-Plugins에서 태전 마켓플레이스를 갱신한 뒤 새 채팅을 시작합니다. CLI를 사용하는 경우 현재 설치된 마켓플레이스를 확인하고 아래처럼 태전 출처를 갱신할 수 있습니다.
+#### Mac
+
+앱을 완전히 종료한 뒤 **터미널**에서 한 줄을 실행합니다.
 
 ```sh
-codex plugin marketplace list
-codex plugin marketplace upgrade taejeon
+codex plugin marketplace upgrade taejeon --json
 ```
 
-앱에서 설치된 태전 업무비서가 켜져 있는지 확인하고 새 채팅에서 실제 조회를 실행합니다. 출처를 갱신하는 것만으로 회사 인증이 완료되는 것은 아닙니다.
+#### Windows
 
-공식 문서: [ChatGPT MCP 메타데이터 갱신](https://developers.openai.com/plugins/deploy/connect-chatgpt), [Codex 마켓플레이스 명령](https://learn.chatgpt.com/docs/developer-commands).
+앱을 완전히 종료한 뒤 **PowerShell**에서 한 줄을 실행합니다. 관리자 권한은 필요하지 않습니다.
+
+```powershell
+codex plugin marketplace upgrade taejeon --json
+```
+
+성공하면 앱을 다시 열고 **태전 업무비서 → 새 대화**에서 아래 질문을 실행합니다.
+
+> 내 회사 연결과 조회 가능한 업무 데이터 원천을 실제로 확인하고, 결과와 기준시각을 알려줘.
+
+<details>
+<summary>갱신 후에도 설치 버전이 그대로일 때만: 태전 캐시 재설치</summary>
+
+`upgrade`는 출처 갱신이며 캐시 전체 삭제가 아닙니다. `codex plugin --help`에서 **add와 remove를 모두 지원하는지 확인한 뒤** 아래 블록을 한 번 붙여 넣습니다. 앞서 출처 갱신이 성공한 경우에만 진행합니다.
+
+**Mac — 터미널**
+
+```sh
+codex plugin remove taejeon-core@taejeon --json &&
+codex plugin add taejeon-core@taejeon --json
+```
+
+**Windows — PowerShell**
+
+```powershell
+codex plugin remove taejeon-core@taejeon --json
+if ($LASTEXITCODE -eq 0) { codex plugin add taejeon-core@taejeon --json }
+```
+
+`add` 결과의 `version`·`installedPath`가 갱신된 출처와 맞는지 확인하고 앱을 다시 열어 새 대화에서 조회합니다. 별도의 `list` 명령까지 매번 실행할 필요는 없습니다. 회사 인증이 다시 요청되면 본인 계정으로 연결합니다.
+
+</details>
+
+`codex`를 찾지 못하거나 `CODEX_HOME`·홈 경로 오류가 나면 중단하고 앱 업데이트 및 앱의 CLI 경로·설치 환경을 지원 담당자와 확인합니다. 경로를 임의로 만들거나 전체 `.codex` 폴더·로그인 정보·다른 플러그인을 삭제하지 않습니다. 지원 담당자에게는 **Mac/Windows, 앱 버전, 실행 시각, 오류 문구**만 알려주세요. 로컬 로그·비밀번호·토큰은 보내지 않습니다.
+
+버전이 맞는데 인증·조회가 실패하면 [Core 연결 안내](https://taejeon-core-llm-mvp.vercel.app/me/mcp)에서 본인 상태를 확인합니다. 지원 담당자는 [공통 연결 진단](docs/connection-doctor.md)과 서버 기록으로 설치·인증·조회 단계를 구분합니다. 설치 갱신은 회사 권한이나 조회 성공을 보장하지 않습니다.
+
+공식 문서: [로컬 컴퓨터와 클라우드 Work](https://learn.chatgpt.com/use-cases/use-your-computer-with-codex#introduction), [플러그인 설치·제거](https://learn.chatgpt.com/docs/developer-commands#codex-plugin), [마켓플레이스 갱신](https://learn.chatgpt.com/docs/developer-commands#codex-plugin-marketplace).
 
 ### 관리자가 읽기 범위를 조정하는 방법
 
