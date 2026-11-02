@@ -73,4 +73,4 @@ try {
  const read=await rpc.request('mcpServer/tool/call',{server:'taejeon-fixture',threadId:started.thread.id,tool:'erp_live_sales_summary',arguments:{}});
  assert(!read.isError);assert.equal(read.structuredContent?.source,'local_fixture');assert(reads>0);
  console.log(JSON.stringify({platform:process.platform,codexVersion:version,oauthFixture:'verified',coldStart:'verified',read:'verified',credentialBackend:'isolated_file',productionCredentials:false}));
-}finally{await rpc?.close();await new Promise(resolve=>server.close(resolve));rmSync(home,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
+}finally{await rpc?.close();await new Promise(resolve=>server.close(resolve));rmSync(home,{recursive:true,force:true,maxRetries:10,retryDelay:250});}
