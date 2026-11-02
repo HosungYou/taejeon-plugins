@@ -65,7 +65,7 @@ Claude에 **본인 회사의 조직 계정이 있으면 조직 계정으로, 없
 
 **설치됨 → 회사 인증됨 → 실제 조회됨**은 서로 다른 단계입니다. 목록에 보이거나 로그인에 성공한 것만으로 첫 조회가 끝난 것은 아닙니다.
 
-[첫 질문과 답변 확인을 자세히 보기](docs/guide/first-question.md)
+[첫 질문과 답변 확인을 자세히 보기](docs/guide/first-question.md) · [연결 확인 방법과 실제 검증 범위](docs/guide/connection-check.md)
 
 ## 4. 휴대폰으로 쓰려면
 
